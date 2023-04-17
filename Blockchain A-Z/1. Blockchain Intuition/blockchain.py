@@ -58,6 +58,7 @@ class Blockchain:
                 return False
             previousBlock = chain[blockIndex]
             blockIndex += 1
+        return True
 
     def mine(self, target):
         return True

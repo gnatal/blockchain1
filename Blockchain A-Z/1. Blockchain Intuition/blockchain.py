@@ -5,6 +5,8 @@ import hashlib
 import json
 from flask import Flask, jsonify
 
+# Block chain class
+
 
 class Blockchain:
 
@@ -35,7 +37,8 @@ class Blockchain:
                 str(newProof**2 - previousProof**2).encode()).hexdigest()
             if hashOperation[0:4] == '0000':
                 validProof = True
-            newProof += 1
+            else:
+                newProof += 1
         return newProof
 
     def hash(self, block):
@@ -60,10 +63,48 @@ class Blockchain:
             blockIndex += 1
         return True
 
-    def mine(self, target):
-        return True
+
+# Web app
+app = Flask(__name__)
+
+
+@app.route('/mine_block', methods=['GET', 'POST'])
+def mineBlock():
+    preivousBlock = blockchain.getPreviousBlock()
+    previousProof = preivousBlock['proof']
+    previousHash = blockchain.hash(preivousBlock)
+    proof = blockchain.proofOfWork(previousProof)
+    block = blockchain.createBlock(previousHash=previousHash, proof=proof)
+    response = {
+        'message': 'Congratulations, you just mined a Block!',
+        'index': block['index'],
+        'timestamp': block['timestamp'],
+        'proof': block['proof'],
+        'data': block['data'],
+        'previousHahs': block['previousHash']
+    }
+    return jsonify(response), 200
+
+
+@app.route('/get_chain', methods=['GET'])
+def getChain():
+    response = {
+        'chain': blockchain.chain,
+        'length': len(blockchain.chain)
+    }
+    return jsonify(response), 200
+
+
+@app.route('/is_valid', methods=['GET'])
+def isValid():
+    valid = blockchain.isBlockchainValid(blockchain.chain)
+    if valid:
+        return 'Blockchain valid'
+    else:
+        return 'Blockchain corrupted'
 
 
 blockchain = Blockchain()
-proof = blockchain.proofOfWork(1)
-print(proof)
+
+# Mine a block
+app.run(host='0.0.0.0', port=4000)

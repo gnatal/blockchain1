@@ -38,6 +38,27 @@ class Blockchain:
             newProof += 1
         return newProof
 
+    def hash(self, block):
+        encodedBlock = json.dumps(block, sort_keys=True).encode()
+        return hashlib.sha256(encodedBlock).hexdigest()
+
+    def isBlockchainValid(self, chain):
+        blockIndex = 1
+        previousBlock = chain[0]
+        while blockIndex < len(chain):
+            block = chain[blockIndex]
+            if block['previousHash'] != self.hash(previousBlock):
+                return False
+            previousProof = self.proofOfWork(previousBlock['proof'])
+            # here we check if the current proof generates a valid PoW
+            proof = block['proof']
+            hashOperation = hashlib.sha256(
+                str(proof**2 - previousProof**2).encode()).hexdigest()
+            if hashOperation[0:4] != '0000':
+                return False
+            previousBlock = chain[blockIndex]
+            blockIndex += 1
+
     def mine(self, target):
         return True
 
